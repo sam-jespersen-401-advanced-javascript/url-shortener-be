@@ -6,7 +6,7 @@ const connect = require('../lib/utils/connect');
 const mongoose = require('mongoose');
 const User = require('../lib/model/User');
 
-describe('app routes', () => {
+describe('url route', () => {
   beforeAll(() => {
     connect();
   });
@@ -19,30 +19,28 @@ describe('app routes', () => {
     return mongoose.connection.close();
   });
 
-  it('can signup new user', () => {
-    return request(app)
+  it('creates a url', async() => {
+    const agent = request.agent(app);
+
+    await agent
       .post('/api/v1/auth/signup')
-      .send({ username: 'test', password: 'password1234' })
+      .send({ username: 'test', password: 'password' });
+
+    return agent
+      .post('/api/v1/urls')
+      .send({
+        customUrl: 'your-mom-42069',
+        longUrl: 'google.com'
+      })
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.any(String),
-          username: 'test',
-          urls: []
+          customUrl: 'your-mom-42069',
+          longUrl: 'google.com',
+          hits: 0,
+          user: expect.any(String),
+          __v: 0
         });
       });
   });
-
-  it('can signin a user', async() => {
-    await User.create({ username: 'test', password: '1234' });
-    const res = await request(app)
-      .post('/api/v1/auth/signin')
-      .send({ username: 'test', password: '1234' });
-
-    expect(res.body).toEqual({
-      _id: expect.any(String),
-      username: 'test',
-      urls: []
-    });
-  });
-
 });
